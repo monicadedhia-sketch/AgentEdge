@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>robots.txt Scanner</title>
+<title>Agent-Ready Scanner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -17,9 +17,25 @@
     --go-tint: #E2F1EB;
     --stop: #B3402E;
     --stop-tint: #F7E6E1;
+    --amber: #8A6D1F;
+    --amber-tint: #F0EBDD;
     --accent: #14513D;
     --mono: 'IBM Plex Mono', ui-monospace, monospace;
     --sans: 'Space Grotesk', system-ui, sans-serif;
+  }
+  html[data-theme="dark"] {
+    --paper: #121A17;
+    --ink: #E8F0EB;
+    --ink-soft: #93A69C;
+    --line: #2A3B34;
+    --card: #1A2521;
+    --go: #3FDBA6;
+    --go-tint: #16332A;
+    --stop: #FF8A70;
+    --stop-tint: #3A211B;
+    --amber: #E0C062;
+    --amber-tint: #332C18;
+    --accent: #5FE0B6;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { background: var(--paper); }
@@ -31,21 +47,39 @@
     flex-direction: column;
     align-items: center;
     padding: 0 20px 80px;
+    transition: background 0.2s ease, color 0.2s ease;
   }
-  .topline {
+  .topbar {
     width: 100%;
     max-width: 720px;
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     padding: 22px 0;
     border-bottom: 1px solid var(--line);
+  }
+  .brand {
     font-family: var(--mono);
     font-size: 12px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-soft);
   }
+  .theme-toggle {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .theme-toggle:hover { border-color: var(--ink); color: var(--ink); }
+  .theme-toggle:focus-visible { outline: 3px solid var(--go); outline-offset: 2px; }
   header.hero {
     width: 100%;
     max-width: 720px;
@@ -117,6 +151,47 @@
   button.go:hover { background: var(--accent); border-color: var(--accent); }
   button.go:focus-visible, input:focus-visible { outline: 3px solid var(--go); outline-offset: 2px; }
   button.go:disabled { opacity: 0.5; cursor: wait; }
+  .customize {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 14px;
+  }
+  .customize-toggle {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .customize-toggle:focus-visible { outline: 3px solid var(--go); outline-offset: 2px; }
+  .customize-toggle::before {
+    content: '▸ ';
+  }
+  .customize-toggle[aria-expanded="true"]::before {
+    content: '▾ ';
+  }
+  .customize-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    margin-top: 12px;
+    padding: 16px 18px;
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+  }
+  .customize-panel label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    cursor: pointer;
+  }
   .hint {
     width: 100%;
     max-width: 720px;
@@ -129,45 +204,67 @@
   #report.show { display: block; animation: rise 0.35s ease; }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { #report.show { animation: none; } }
-  .verdict {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 20px 22px;
-    border-radius: 10px 10px 0 0;
-    border: 1.5px solid var(--ink);
-    border-bottom: none;
+  .score-line {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
   }
-  .verdict.found { background: var(--go-tint); }
-  .verdict.missing { background: var(--stop-tint); }
-  .verdict.error { background: #F0EBDD; }
+  .score-line b { color: var(--ink); font-weight: 600; }
+  .check-card {
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+  }
+  .check-card.found { border-color: var(--go); }
+  .check-card.missing { border-color: var(--stop); }
+  .check-card.error { border-color: var(--amber); }
+  .check-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .check-name {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 14.5px;
+  }
   .stamp {
     font-family: var(--mono);
     font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.12em;
-    padding: 7px 14px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 5px 11px;
     border-radius: 6px;
     border: 2px solid currentColor;
-    transform: rotate(-2deg);
     white-space: nowrap;
   }
-  .verdict.found .stamp { color: var(--go); }
-  .verdict.missing .stamp { color: var(--stop); }
-  .verdict.error .stamp { color: #8A6D1F; }
-  .verdict .detail { font-size: 15px; line-height: 1.45; }
-  .verdict .detail strong { font-family: var(--mono); font-size: 14px; }
+  .check-card.found .stamp { color: var(--go); }
+  .check-card.missing .stamp { color: var(--stop); }
+  .check-card.error .stamp { color: var(--amber); }
+  .check-detail {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .check-detail strong { color: var(--ink); font-family: var(--mono); font-size: 13px; }
+  .check-extra { margin-top: 14px; }
   .filecard {
-    background: var(--card);
-    border: 1.5px solid var(--ink);
-    border-radius: 0 0 10px 10px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
     overflow: hidden;
   }
   .filecard .bar {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    padding: 10px 16px;
+    padding: 9px 14px;
     border-bottom: 1px solid var(--line);
     font-family: var(--mono);
     font-size: 12px;
@@ -177,11 +274,11 @@
   .filecard .bar a { color: var(--accent); }
   pre.body {
     font-family: var(--mono);
-    font-size: 13.5px;
+    font-size: 13px;
     line-height: 1.7;
-    padding: 18px 20px;
+    padding: 16px 18px;
     overflow-x: auto;
-    max-height: 480px;
+    max-height: 340px;
     overflow-y: auto;
     counter-reset: ln;
   }
@@ -193,7 +290,7 @@
     width: 3ch;
     margin-right: 16px;
     text-align: right;
-    color: #B4BFB8;
+    color: #96A29A;
     user-select: none;
   }
   .k-agent { color: #7A3EA1; font-weight: 600; }
@@ -201,23 +298,43 @@
   .k-allow { color: var(--go); font-weight: 600; }
   .k-other { color: #1F5FA8; font-weight: 600; }
   .k-comment { color: #97A39C; font-style: italic; }
-  .empty-note {
-    padding: 26px 20px;
-    font-size: 14.5px;
-    color: var(--ink-soft);
-    line-height: 1.55;
-  }
-  .summary {
-    display: flex;
-    gap: 26px;
-    padding: 12px 20px;
-    border-top: 1px solid var(--line);
+  .agent-list {
+    list-style: none;
     font-family: var(--mono);
-    font-size: 12px;
-    color: var(--ink-soft);
-    flex-wrap: wrap;
+    font-size: 13px;
   }
-  .summary b { color: var(--ink); font-weight: 600; }
+  .agent-list li { padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .agent-list li:last-child { border-bottom: none; }
+  .agent-list .policy { color: var(--ink-soft); margin-left: 8px; }
+  /* ---- faq ---- */
+  .faq {
+    width: 100%;
+    max-width: 720px;
+    margin-top: 48px;
+  }
+  .faq details {
+    border-top: 1px solid var(--line);
+    padding: 16px 0;
+  }
+  .faq details:last-child { border-bottom: 1px solid var(--line); }
+  .faq summary {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::before { content: '+ '; color: var(--accent); }
+  .faq details[open] summary::before { content: '\2212 '; }
+  .faq .faq-body {
+    margin-top: 10px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .faq .faq-body code { font-family: var(--mono); font-size: 13px; color: var(--ink); }
+  .faq .faq-body a { color: var(--accent); }
   footer {
     margin-top: auto;
     padding-top: 60px;
@@ -234,11 +351,14 @@
 </head>
 <body>
 
-<div class="topline"><span>robots.txt scanner</span><span>RFC 9309</span></div>
+<div class="topbar">
+  <span class="brand">agent-ready scanner</span>
+  <button type="button" class="theme-toggle" id="themeToggle">Dark mode</button>
+</div>
 
 <header class="hero">
-  <h1>Does your site have a<br><span class="file">robots.txt</span>?</h1>
-  <p class="sub">Enter a website address. We'll request its robots.txt file and report back what we find — the file's contents, or the fact that there isn't one.</p>
+  <h1>Is your site<br><span class="file">agent-ready</span>?</h1>
+  <p class="sub">Enter a website address. We'll check the public signals AI agents and crawlers look for — robots.txt, llms.txt, sitemap.xml, and explicit AI bot rules — and report back what we find.</p>
 </header>
 
 <form class="scan" id="scanForm">
@@ -248,21 +368,43 @@
   </div>
   <button type="submit" class="go" id="goBtn">Scan</button>
 </form>
-<p class="hint">The scan requests <code>/robots.txt</code> at the site's root, via a public CORS proxy so it works straight from your browser.</p>
+
+<div class="customize">
+  <button type="button" class="customize-toggle" id="customizeToggle" aria-expanded="false" aria-controls="customizePanel">Customize scan</button>
+  <div class="customize-panel" id="customizePanel" hidden>
+    <label><input type="checkbox" id="chkRobots" checked> robots.txt</label>
+    <label><input type="checkbox" id="chkLlms" checked> llms.txt</label>
+    <label><input type="checkbox" id="chkSitemap" checked> sitemap.xml</label>
+    <label><input type="checkbox" id="chkAibots" checked> AI bot rules</label>
+  </div>
+</div>
+
+<p class="hint">Each check requests a public file at the site's root, via a public CORS proxy so it works straight from your browser.</p>
 
 <section id="report" aria-live="polite">
-  <div class="verdict" id="verdict">
-    <span class="stamp" id="stamp"></span>
-    <div class="detail" id="detail"></div>
-  </div>
-  <div class="filecard">
-    <div class="bar">
-      <span id="fileLabel"></span>
-      <a id="fileLink" href="#" target="_blank" rel="noopener">open raw file ↗</a>
+  <div class="score-line" id="scoreLine"></div>
+  <div id="checksList"></div>
+</section>
+
+<section class="faq">
+  <details>
+    <summary>What do we check?</summary>
+    <div class="faq-body">
+      Four signals, all read straight from your site's public files: <code>robots.txt</code> (crawl rules), <code>llms.txt</code> (a proposed standard for guiding LLMs to your key content), <code>sitemap.xml</code> (page discovery), and whether your <code>robots.txt</code> explicitly addresses known AI crawlers like GPTBot, ClaudeBot, or CCBot.
     </div>
-    <div id="fileBody"></div>
-    <div class="summary" id="summary" hidden></div>
-  </div>
+  </details>
+  <details>
+    <summary>How do I fix a failing check?</summary>
+    <div class="faq-body">
+      Missing <code>robots.txt</code> or <code>sitemap.xml</code>? Publish one at your site's root. Missing <code>llms.txt</code>? Add a plain-text file at <code>/llms.txt</code> summarizing your site for language models. No AI bot rules? Add explicit <code>User-agent</code> blocks for the crawlers you want to allow or disallow — an unlisted crawler falls back to your <code>User-agent: *</code> rules, if any.
+    </div>
+  </details>
+  <details>
+    <summary>Where can I learn more?</summary>
+    <div class="faq-body">
+      See <a href="https://www.rfc-editor.org/rfc/rfc9309.html" target="_blank" rel="noopener">RFC 9309</a> for the robots.txt standard, <a href="https://llmstxt.org/" target="_blank" rel="noopener">llmstxt.org</a> for the llms.txt proposal, and <a href="https://www.sitemaps.org/" target="_blank" rel="noopener">sitemaps.org</a> for sitemap.xml.
+    </div>
+  </details>
 </section>
 
 <footer>My first PR - Monica</footer>
@@ -272,13 +414,36 @@ const form = document.getElementById('scanForm');
 const input = document.getElementById('urlInput');
 const btn = document.getElementById('goBtn');
 const report = document.getElementById('report');
-const verdict = document.getElementById('verdict');
-const stamp = document.getElementById('stamp');
-const detail = document.getElementById('detail');
-const fileLabel = document.getElementById('fileLabel');
-const fileLink = document.getElementById('fileLink');
-const fileBody = document.getElementById('fileBody');
-const summary = document.getElementById('summary');
+const scoreLine = document.getElementById('scoreLine');
+const checksList = document.getElementById('checksList');
+const themeToggle = document.getElementById('themeToggle');
+const customizeToggle = document.getElementById('customizeToggle');
+const customizePanel = document.getElementById('customizePanel');
+const chkRobots = document.getElementById('chkRobots');
+const chkLlms = document.getElementById('chkLlms');
+const chkSitemap = document.getElementById('chkSitemap');
+const chkAibots = document.getElementById('chkAibots');
+
+// ---- theme ----
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  themeToggle.textContent = t === 'dark' ? 'Light mode' : 'Dark mode';
+}
+let storedTheme = localStorage.getItem('theme');
+if (!storedTheme) storedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+applyTheme(storedTheme);
+themeToggle.addEventListener('click', () => {
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', next);
+  applyTheme(next);
+});
+
+// ---- customize scan ----
+customizeToggle.addEventListener('click', () => {
+  const expanded = customizeToggle.getAttribute('aria-expanded') === 'true';
+  customizeToggle.setAttribute('aria-expanded', String(!expanded));
+  customizePanel.hidden = expanded;
+});
 
 function normalize(raw) {
   let v = raw.trim();
@@ -292,6 +457,16 @@ function normalize(raw) {
 
 function esc(s) {
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function looksLikeHtml(text) {
+  const head = text.slice(0, 300).toLowerCase();
+  return head.includes('<!doctype html') || head.includes('<html');
+}
+
+function looksLikeXml(text) {
+  const head = text.slice(0, 300).toLowerCase();
+  return head.includes('<?xml') || head.includes('<urlset') || head.includes('<sitemapindex');
 }
 
 function highlight(text) {
@@ -315,89 +490,199 @@ function highlight(text) {
   return { html, agents, disallows, allows, sitemaps, lineCount: lines.length };
 }
 
-async function fetchRobots(robotsUrl) {
-  // Proxy 1: allorigins (returns JSON with status + contents)
+function plainLines(text, max) {
+  const lines = text.replace(/\r\n/g,'\n').split('\n').slice(0, max || 200);
+  return lines.map(l => '<span class="ln">' + (esc(l) || ' ') + '</span>').join('');
+}
+
+async function fetchThroughProxy(url) {
   try {
-    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(robotsUrl) + '&t=' + Date.now());
+    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url) + '&t=' + Date.now());
     if (r.ok) {
       const j = await r.json();
       const status = j.status && j.status.http_code ? j.status.http_code : (j.contents ? 200 : 0);
       return { status, text: j.contents || '' };
     }
   } catch (e) { /* fall through */ }
-  // Proxy 2: corsproxy.io (raw passthrough)
-  const r2 = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(robotsUrl));
+  const r2 = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(url));
   return { status: r2.status, text: await r2.text() };
 }
 
-function looksLikeHtml(text) {
-  const head = text.slice(0, 300).toLowerCase();
-  return head.includes('<!doctype html') || head.includes('<html');
+// ---- individual checks ----
+
+async function checkRobots(origin) {
+  const url = origin + '/robots.txt';
+  const { status, text } = await fetchThroughProxy(url);
+  const base = { id: 'robots', label: 'robots.txt', url };
+  if (status === 200 && text && !looksLikeHtml(text)) {
+    const h = highlight(text);
+    return { ...base, status: 'found', rawText: text, stamp: 'FOUND',
+      detail: '<strong>' + esc(origin) + '</strong> serves a robots.txt file (HTTP 200). Crawlers and agents visiting this site will read the rules below.',
+      extra: '<div class="filecard"><div class="bar"><span>' + esc(url) + '</span><a href="' + esc(url) + '" target="_blank" rel="noopener">open raw file ↗</a></div>' +
+        '<pre class="body">' + h.html + '</pre></div>' };
+  } else if (status === 200 && text && looksLikeHtml(text)) {
+    return { ...base, status: 'missing', stamp: 'NOT FOUND',
+      detail: '<strong>' + esc(origin) + '</strong> responded with an HTML page instead of a plain-text robots.txt — effectively, there is no usable robots.txt here.' };
+  } else if (status === 404 || (status === 200 && !text)) {
+    return { ...base, status: 'missing', stamp: 'NOT FOUND',
+      detail: '<strong>' + esc(origin) + '</strong> has no robots.txt (HTTP ' + (status || 404) + '). With no file present, crawlers assume the entire site is open.' };
+  }
+  return { ...base, status: 'error', stamp: 'HTTP ' + (status || '?'),
+    detail: 'The request to <strong>' + esc(url) + '</strong> came back with status ' + (status || 'unknown') + '. The site may be blocking automated requests, or the proxy couldn’t reach it.' };
 }
 
-function show(kind, stampText, detailHtml) {
-  verdict.className = 'verdict ' + kind;
-  stamp.textContent = stampText;
-  detail.innerHTML = detailHtml;
-  report.classList.add('show');
+async function checkLlms(origin) {
+  const url = origin + '/llms.txt';
+  const { status, text } = await fetchThroughProxy(url);
+  const base = { id: 'llms', label: 'llms.txt', url };
+  if (status === 200 && text && !looksLikeHtml(text)) {
+    return { ...base, status: 'found', stamp: 'FOUND',
+      detail: '<strong>' + esc(origin) + '</strong> serves an llms.txt file, giving language models a curated summary of the site.',
+      extra: '<div class="filecard"><div class="bar"><span>' + esc(url) + '</span><a href="' + esc(url) + '" target="_blank" rel="noopener">open raw file ↗</a></div>' +
+        '<pre class="body">' + plainLines(text, 40) + '</pre></div>' };
+  } else if (status === 404 || (status === 200 && (!text || looksLikeHtml(text)))) {
+    return { ...base, status: 'missing', stamp: 'NOT FOUND',
+      detail: '<strong>' + esc(origin) + '</strong> has no llms.txt. This proposed standard lets you point language models to your most useful pages directly.' };
+  }
+  return { ...base, status: 'error', stamp: 'HTTP ' + (status || '?'),
+    detail: 'The request to <strong>' + esc(url) + '</strong> came back with status ' + (status || 'unknown') + '.' };
+}
+
+async function checkSitemap(origin) {
+  const url = origin + '/sitemap.xml';
+  const { status, text } = await fetchThroughProxy(url);
+  const base = { id: 'sitemap', label: 'sitemap.xml', url };
+  if (status === 200 && text && looksLikeXml(text)) {
+    const count = (text.match(/<loc>/gi) || []).length;
+    return { ...base, status: 'found', stamp: 'FOUND',
+      detail: '<strong>' + esc(origin) + '</strong> serves a sitemap.xml listing <strong>' + count + '</strong> URL' + (count === 1 ? '' : 's') + ', helping crawlers discover pages.' };
+  } else if (status === 404 || !text || looksLikeHtml(text)) {
+    return { ...base, status: 'missing', stamp: 'NOT FOUND',
+      detail: '<strong>' + esc(origin) + '</strong> has no sitemap.xml at its root. Crawlers must discover pages by following links instead.' };
+  }
+  return { ...base, status: 'error', stamp: 'HTTP ' + (status || '?'),
+    detail: 'The request to <strong>' + esc(url) + '</strong> came back with status ' + (status || 'unknown') + '.' };
+}
+
+const AI_BOTS = ['GPTBot', 'ChatGPT-User', 'ClaudeBot', 'anthropic-ai', 'Claude-Web', 'CCBot', 'Google-Extended', 'PerplexityBot', 'Bytespider', 'Applebot-Extended', 'Amazonbot'];
+
+function checkAiBots(robotsResult) {
+  const base = { id: 'aibots', label: 'AI bot rules' };
+  if (!robotsResult || robotsResult.status !== 'found' || !robotsResult.rawText) {
+    return { ...base, status: 'error', stamp: 'N/A',
+      detail: 'Couldn’t check AI bot rules — no robots.txt was found to inspect.' };
+  }
+  const lines = robotsResult.rawText.replace(/\r\n/g,'\n').split('\n');
+  const blocks = [];
+  let current = null;
+  lines.forEach(line => {
+    const t = line.trim();
+    const uaMatch = /^user-agent\s*:\s*(.+)$/i.exec(t);
+    if (uaMatch) {
+      if (!current || current.rules.length) current = { agents: [], rules: [] };
+      current.agents.push(uaMatch[1].trim());
+      if (!blocks.includes(current)) blocks.push(current);
+      return;
+    }
+    if (!current) return;
+    const disMatch = /^disallow\s*:\s*(.*)$/i.exec(t);
+    const allMatch = /^allow\s*:\s*(.*)$/i.exec(t);
+    if (disMatch) current.rules.push({ type: 'disallow', path: disMatch[1].trim() });
+    else if (allMatch) current.rules.push({ type: 'allow', path: allMatch[1].trim() });
+  });
+
+  const matched = [];
+  AI_BOTS.forEach(bot => {
+    const block = blocks.find(b => b.agents.some(a => a.toLowerCase() === bot.toLowerCase()));
+    if (!block) return;
+    const fullyBlocked = block.rules.some(r => r.type === 'disallow' && (r.path === '/' || r.path === ''));
+    let policy;
+    if (fullyBlocked) policy = 'blocked';
+    else if (block.rules.length) policy = 'partially restricted';
+    else policy = 'explicitly allowed';
+    matched.push({ bot, policy });
+  });
+
+  if (matched.length) {
+    const listHtml = '<ul class="agent-list">' + matched.map(m =>
+      '<li>' + esc(m.bot) + '<span class="policy">' + esc(m.policy) + '</span></li>').join('') + '</ul>';
+    return { ...base, status: 'found', stamp: 'FOUND',
+      detail: 'robots.txt explicitly addresses <strong>' + matched.length + '</strong> known AI crawler' + (matched.length === 1 ? '' : 's') + '.',
+      extra: listHtml };
+  }
+  return { ...base, status: 'missing', stamp: 'NOT FOUND',
+    detail: 'None of the common AI crawlers (GPTBot, ClaudeBot, CCBot, and others) are explicitly named in robots.txt. They’ll fall back to any <strong>User-agent: *</strong> rules present, if any.' };
+}
+
+function renderCheckCard(r) {
+  return '<div class="check-card ' + r.status + '">' +
+    '<div class="check-head"><span class="check-name">' + esc(r.label) + '</span><span class="stamp">' + esc(r.stamp) + '</span></div>' +
+    '<p class="check-detail">' + r.detail + '</p>' +
+    (r.extra ? '<div class="check-extra">' + r.extra + '</div>' : '') +
+    '</div>';
 }
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const origin = normalize(input.value);
   if (!origin) {
-    show('error', 'INVALID', 'That doesn\u2019t look like a valid website address. Try something like <strong>example.com</strong>.');
-    fileLabel.textContent = '—';
-    fileLink.hidden = true;
-    fileBody.innerHTML = '';
-    summary.hidden = true;
+    report.classList.add('show');
+    scoreLine.textContent = '';
+    checksList.innerHTML = '<div class="check-card error"><div class="check-head"><span class="check-name">Invalid address</span><span class="stamp">ERROR</span></div>' +
+      '<p class="check-detail">That doesn’t look like a valid website address. Try something like <strong>example.com</strong>.</p></div>';
     return;
   }
-  const robotsUrl = origin + '/robots.txt';
+
+  const enabled = {
+    robots: chkRobots.checked,
+    llms: chkLlms.checked,
+    sitemap: chkSitemap.checked,
+    aibots: chkAibots.checked,
+  };
+
+  if (!enabled.robots && !enabled.llms && !enabled.sitemap && !enabled.aibots) {
+    report.classList.add('show');
+    scoreLine.textContent = '';
+    checksList.innerHTML = '<div class="check-card error"><div class="check-head"><span class="check-name">No checks selected</span><span class="stamp">ERROR</span></div>' +
+      '<p class="check-detail">Enable at least one check under “Customize scan”.</p></div>';
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = 'Scanning…';
-  fileLabel.textContent = robotsUrl;
-  fileLink.href = robotsUrl;
-  fileLink.hidden = false;
-  fileBody.innerHTML = '<div class="empty-note">Requesting ' + esc(robotsUrl) + ' …</div>';
-  summary.hidden = true;
-  show('error', 'SCANNING', 'Checking <strong>' + esc(origin) + '</strong> for a robots.txt file…');
+  report.classList.add('show');
+  scoreLine.textContent = 'Scanning ' + origin + ' …';
+  checksList.innerHTML = '';
 
-  try {
-    const { status, text } = await fetchRobots(robotsUrl);
-    if (status === 200 && text && !looksLikeHtml(text)) {
-      const h = highlight(text);
-      show('found', 'FOUND \u2713',
-        '<strong>' + esc(origin) + '</strong> serves a robots.txt file (HTTP 200). Crawlers and agents visiting this site will read the rules below.');
-      fileBody.innerHTML = '<pre class="body">' + h.html + '</pre>';
-      summary.hidden = false;
-      summary.innerHTML =
-        '<span><b>' + h.lineCount + '</b> lines</span>' +
-        '<span><b>' + h.agents + '</b> user-agent group' + (h.agents === 1 ? '' : 's') + '</span>' +
-        '<span><b>' + h.disallows + '</b> disallow rule' + (h.disallows === 1 ? '' : 's') + '</span>' +
-        '<span><b>' + h.allows + '</b> allow rule' + (h.allows === 1 ? '' : 's') + '</span>' +
-        '<span><b>' + h.sitemaps + '</b> sitemap' + (h.sitemaps === 1 ? '' : 's') + '</span>';
-    } else if (status === 200 && text && looksLikeHtml(text)) {
-      show('missing', 'NOT A ROBOTS FILE',
-        '<strong>' + esc(origin) + '</strong> responded, but with an HTML page instead of a plain-text robots.txt \u2014 many sites do this for missing files. Effectively, there is no usable robots.txt here.');
-      fileBody.innerHTML = '<div class="empty-note">The response was an HTML document, not a robots.txt rule file. Crawlers will treat this site as having no robots.txt and assume everything is allowed.</div>';
-    } else if (status === 404 || (status === 200 && !text)) {
-      show('missing', 'NOT FOUND \u2715',
-        '<strong>' + esc(origin) + '</strong> has no robots.txt (HTTP ' + (status || 404) + '). With no file present, crawlers assume the entire site is open to them.');
-      fileBody.innerHTML = '<div class="empty-note">No file was found at ' + esc(robotsUrl) + '. That isn\u2019t an error by itself \u2014 it simply means the site publishes no crawl rules.</div>';
-    } else {
-      show('error', 'HTTP ' + (status || '?'),
-        'The request to <strong>' + esc(robotsUrl) + '</strong> came back with status ' + (status || 'unknown') + '. The site may be blocking automated requests, or the proxy couldn\u2019t reach it.');
-      fileBody.innerHTML = '<div class="empty-note">Try the \u201copen raw file\u201d link above to check it directly in your browser.</div>';
-    }
-  } catch (err) {
-    show('error', 'UNREACHABLE',
-      'Couldn\u2019t complete the scan for <strong>' + esc(origin) + '</strong>. The site or the CORS proxy may be unavailable right now.');
-    fileBody.innerHTML = '<div class="empty-note">Check the address, or use the \u201copen raw file\u201d link above to view ' + esc(robotsUrl) + ' directly.</div>';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Scan';
-  }
+  const robotsPromise = (enabled.robots || enabled.aibots) ? checkRobots(origin) : null;
+  const jobs = {};
+  if (enabled.robots) jobs.robots = robotsPromise;
+  if (enabled.llms) jobs.llms = checkLlms(origin);
+  if (enabled.sitemap) jobs.sitemap = checkSitemap(origin);
+  if (enabled.aibots) jobs.aibots = robotsPromise.then(checkAiBots);
+
+  const keys = Object.keys(jobs);
+  const settled = await Promise.allSettled(keys.map(k => jobs[k]));
+
+  const order = ['robots', 'llms', 'sitemap', 'aibots'];
+  const resultMap = {};
+  keys.forEach((k, i) => {
+    const s = settled[i];
+    resultMap[k] = s.status === 'fulfilled' ? s.value : { id: k, label: k, status: 'error', stamp: 'ERROR', detail: 'Something went wrong while running this check.' };
+  });
+
+  let pass = 0, total = 0;
+  const html = order.filter(k => enabled[k]).map(k => {
+    total++;
+    if (resultMap[k].status === 'found') pass++;
+    return renderCheckCard(resultMap[k]);
+  }).join('');
+
+  checksList.innerHTML = html;
+  scoreLine.innerHTML = '<b>' + pass + '/' + total + '</b> checks passed';
+
+  btn.disabled = false;
+  btn.textContent = 'Scan';
 });
 </script>
 </body>
