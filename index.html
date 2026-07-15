@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>robots.txt Scanner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F1F4F0;
+    --ink: #1C2B26;
+    --ink-soft: #55655E;
+    --line: #C9D2CC;
+    --card: #FFFFFF;
+    --go: #0E7B5B;
+    --go-tint: #E2F1EB;
+    --stop: #B3402E;
+    --stop-tint: #F7E6E1;
+    --accent: #14513D;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --sans: 'Space Grotesk', system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--paper); }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px 80px;
+  }
+  .topline {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  header.hero {
+    width: 100%;
+    max-width: 720px;
+    padding: 64px 0 40px;
+  }
+  h1 {
+    font-size: clamp(34px, 6vw, 56px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  h1 .file {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .sub {
+    margin-top: 16px;
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 54ch;
+  }
+  form.scan {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .url-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: 8px;
+    padding: 0 14px;
+  }
+  .url-wrap .prefix {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--ink-soft);
+    user-select: none;
+  }
+  input[type="text"] {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--ink);
+    padding: 15px 8px;
+    min-width: 0;
+  }
+  button.go {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 15px;
+    background: var(--ink);
+    color: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 8px;
+    padding: 0 26px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button.go:hover { background: var(--accent); border-color: var(--accent); }
+  button.go:focus-visible, input:focus-visible { outline: 3px solid var(--go); outline-offset: 2px; }
+  button.go:disabled { opacity: 0.5; cursor: wait; }
+  .hint {
+    width: 100%;
+    max-width: 720px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 40px;
+  }
+  /* ---- report ---- */
+  #report { width: 100%; max-width: 720px; display: none; }
+  #report.show { display: block; animation: rise 0.35s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { #report.show { animation: none; } }
+  .verdict {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 22px;
+    border-radius: 10px 10px 0 0;
+    border: 1.5px solid var(--ink);
+    border-bottom: none;
+  }
+  .verdict.found { background: var(--go-tint); }
+  .verdict.missing { background: var(--stop-tint); }
+  .verdict.error { background: #F0EBDD; }
+  .stamp {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: 2px solid currentColor;
+    transform: rotate(-2deg);
+    white-space: nowrap;
+  }
+  .verdict.found .stamp { color: var(--go); }
+  .verdict.missing .stamp { color: var(--stop); }
+  .verdict.error .stamp { color: #8A6D1F; }
+  .verdict .detail { font-size: 15px; line-height: 1.45; }
+  .verdict .detail strong { font-family: var(--mono); font-size: 14px; }
+  .filecard {
+    background: var(--card);
+    border: 1.5px solid var(--ink);
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+  }
+  .filecard .bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    flex-wrap: wrap;
+  }
+  .filecard .bar a { color: var(--accent); }
+  pre.body {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.7;
+    padding: 18px 20px;
+    overflow-x: auto;
+    max-height: 480px;
+    overflow-y: auto;
+    counter-reset: ln;
+  }
+  pre.body .ln { display: block; white-space: pre; }
+  pre.body .ln::before {
+    counter-increment: ln;
+    content: counter(ln);
+    display: inline-block;
+    width: 3ch;
+    margin-right: 16px;
+    text-align: right;
+    color: #B4BFB8;
+    user-select: none;
+  }
+  .k-agent { color: #7A3EA1; font-weight: 600; }
+  .k-disallow { color: var(--stop); font-weight: 600; }
+  .k-allow { color: var(--go); font-weight: 600; }
+  .k-other { color: #1F5FA8; font-weight: 600; }
+  .k-comment { color: #97A39C; font-style: italic; }
+  .empty-note {
+    padding: 26px 20px;
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .summary {
+    display: flex;
+    gap: 26px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    flex-wrap: wrap;
+  }
+  .summary b { color: var(--ink); font-weight: 600; }
+  footer {
+    margin-top: auto;
+    padding-top: 60px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+  }
+  @media (max-width: 540px) {
+    form.scan { flex-direction: column; }
+    button.go { padding: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topline"><span>robots.txt scanner</span><span>RFC 9309</span></div>
+
+<header class="hero">
+  <h1>Does your site have a<br><span class="file">robots.txt</span>?</h1>
+  <p class="sub">Enter a website address. We'll request its robots.txt file and report back what we find — the file's contents, or the fact that there isn't one.</p>
+</header>
+
+<form class="scan" id="scanForm">
+  <div class="url-wrap">
+    <span class="prefix">https://</span>
+    <input type="text" id="urlInput" placeholder="example.com" autocomplete="off" spellcheck="false" aria-label="Website address">
+  </div>
+  <button type="submit" class="go" id="goBtn">Scan</button>
+</form>
+<p class="hint">The scan requests <code>/robots.txt</code> at the site's root, via a public CORS proxy so it works straight from your browser.</p>
+
+<section id="report" aria-live="polite">
+  <div class="verdict" id="verdict">
+    <span class="stamp" id="stamp"></span>
+    <div class="detail" id="detail"></div>
+  </div>
+  <div class="filecard">
+    <div class="bar">
+      <span id="fileLabel"></span>
+      <a id="fileLink" href="#" target="_blank" rel="noopener">open raw file ↗</a>
+    </div>
+    <div id="fileBody"></div>
+    <div class="summary" id="summary" hidden></div>
+  </div>
+</section>
+
+<footer>one file. one question. that's the whole tool.</footer>
+
+<script>
+const form = document.getElementById('scanForm');
+const input = document.getElementById('urlInput');
+const btn = document.getElementById('goBtn');
+const report = document.getElementById('report');
+const verdict = document.getElementById('verdict');
+const stamp = document.getElementById('stamp');
+const detail = document.getElementById('detail');
+const fileLabel = document.getElementById('fileLabel');
+const fileLink = document.getElementById('fileLink');
+const fileBody = document.getElementById('fileBody');
+const summary = document.getElementById('summary');
+
+function normalize(raw) {
+  let v = raw.trim();
+  if (!v) return null;
+  v = v.replace(/^https?:\/\//i, '');
+  try {
+    const u = new URL('https://' + v);
+    return u.origin;
+  } catch { return null; }
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function highlight(text) {
+  const lines = text.replace(/\r\n/g,'\n').split('\n');
+  let agents = 0, disallows = 0, allows = 0, sitemaps = 0;
+  const html = lines.map(line => {
+    const t = line.trim();
+    let cls = null;
+    if (t.startsWith('#')) cls = 'k-comment';
+    else if (/^user-agent\s*:/i.test(t)) { cls = 'k-agent'; agents++; }
+    else if (/^disallow\s*:/i.test(t)) { cls = 'k-disallow'; disallows++; }
+    else if (/^allow\s*:/i.test(t)) { cls = 'k-allow'; allows++; }
+    else if (/^(sitemap|crawl-delay|host)\s*:/i.test(t)) { cls = 'k-other'; sitemaps += /^sitemap/i.test(t) ? 1 : 0; }
+    if (!cls) return '<span class="ln">' + (esc(line) || ' ') + '</span>';
+    const idx = line.indexOf(':');
+    if (cls !== 'k-comment' && idx > -1) {
+      return '<span class="ln"><span class="' + cls + '">' + esc(line.slice(0, idx + 1)) + '</span>' + esc(line.slice(idx + 1)) + '</span>';
+    }
+    return '<span class="ln"><span class="' + cls + '">' + esc(line) + '</span></span>';
+  }).join('');
+  return { html, agents, disallows, allows, sitemaps, lineCount: lines.length };
+}
+
+async function fetchRobots(robotsUrl) {
+  // Proxy 1: allorigins (returns JSON with status + contents)
+  try {
+    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(robotsUrl) + '&t=' + Date.now());
+    if (r.ok) {
+      const j = await r.json();
+      const status = j.status && j.status.http_code ? j.status.http_code : (j.contents ? 200 : 0);
+      return { status, text: j.contents || '' };
+    }
+  } catch (e) { /* fall through */ }
+  // Proxy 2: corsproxy.io (raw passthrough)
+  const r2 = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(robotsUrl));
+  return { status: r2.status, text: await r2.text() };
+}
+
+function looksLikeHtml(text) {
+  const head = text.slice(0, 300).toLowerCase();
+  return head.includes('<!doctype html') || head.includes('<html');
+}
+
+function show(kind, stampText, detailHtml) {
+  verdict.className = 'verdict ' + kind;
+  stamp.textContent = stampText;
+  detail.innerHTML = detailHtml;
+  report.classList.add('show');
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const origin = normalize(input.value);
+  if (!origin) {
+    show('error', 'INVALID', 'That doesn\u2019t look like a valid website address. Try something like <strong>example.com</strong>.');
+    fileLabel.textContent = '—';
+    fileLink.hidden = true;
+    fileBody.innerHTML = '';
+    summary.hidden = true;
+    return;
+  }
+  const robotsUrl = origin + '/robots.txt';
+  btn.disabled = true;
+  btn.textContent = 'Scanning…';
+  fileLabel.textContent = robotsUrl;
+  fileLink.href = robotsUrl;
+  fileLink.hidden = false;
+  fileBody.innerHTML = '<div class="empty-note">Requesting ' + esc(robotsUrl) + ' …</div>';
+  summary.hidden = true;
+  show('error', 'SCANNING', 'Checking <strong>' + esc(origin) + '</strong> for a robots.txt file…');
+
+  try {
+    const { status, text } = await fetchRobots(robotsUrl);
+    if (status === 200 && text && !looksLikeHtml(text)) {
+      const h = highlight(text);
+      show('found', 'FOUND \u2713',
+        '<strong>' + esc(origin) + '</strong> serves a robots.txt file (HTTP 200). Crawlers and agents visiting this site will read the rules below.');
+      fileBody.innerHTML = '<pre class="body">' + h.html + '</pre>';
+      summary.hidden = false;
+      summary.innerHTML =
+        '<span><b>' + h.lineCount + '</b> lines</span>' +
+        '<span><b>' + h.agents + '</b> user-agent group' + (h.agents === 1 ? '' : 's') + '</span>' +
+        '<span><b>' + h.disallows + '</b> disallow rule' + (h.disallows === 1 ? '' : 's') + '</span>' +
+        '<span><b>' + h.allows + '</b> allow rule' + (h.allows === 1 ? '' : 's') + '</span>' +
+        '<span><b>' + h.sitemaps + '</b> sitemap' + (h.sitemaps === 1 ? '' : 's') + '</span>';
+    } else if (status === 200 && text && looksLikeHtml(text)) {
+      show('missing', 'NOT A ROBOTS FILE',
+        '<strong>' + esc(origin) + '</strong> responded, but with an HTML page instead of a plain-text robots.txt \u2014 many sites do this for missing files. Effectively, there is no usable robots.txt here.');
+      fileBody.innerHTML = '<div class="empty-note">The response was an HTML document, not a robots.txt rule file. Crawlers will treat this site as having no robots.txt and assume everything is allowed.</div>';
+    } else if (status === 404 || (status === 200 && !text)) {
+      show('missing', 'NOT FOUND \u2715',
+        '<strong>' + esc(origin) + '</strong> has no robots.txt (HTTP ' + (status || 404) + '). With no file present, crawlers assume the entire site is open to them.');
+      fileBody.innerHTML = '<div class="empty-note">No file was found at ' + esc(robotsUrl) + '. That isn\u2019t an error by itself \u2014 it simply means the site publishes no crawl rules.</div>';
+    } else {
+      show('error', 'HTTP ' + (status || '?'),
+        'The request to <strong>' + esc(robotsUrl) + '</strong> came back with status ' + (status || 'unknown') + '. The site may be blocking automated requests, or the proxy couldn\u2019t reach it.');
+      fileBody.innerHTML = '<div class="empty-note">Try the \u201copen raw file\u201d link above to check it directly in your browser.</div>';
+    }
+  } catch (err) {
+    show('error', 'UNREACHABLE',
+      'Couldn\u2019t complete the scan for <strong>' + esc(origin) + '</strong>. The site or the CORS proxy may be unavailable right now.');
+    fileBody.innerHTML = '<div class="empty-note">Check the address, or use the \u201copen raw file\u201d link above to view ' + esc(robotsUrl) + ' directly.</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Scan';
+  }
+});
+</script>
+</body>
+</html>
