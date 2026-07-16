@@ -22,6 +22,10 @@
     --accent: #14513D;
     --mono: 'IBM Plex Mono', ui-monospace, monospace;
     --sans: 'Space Grotesk', system-ui, sans-serif;
+    --site-0: var(--accent);
+    --site-1: #1F5FA8;
+    --site-2: #7A3EA1;
+    --site-3: #C97A2E;
   }
   html[data-theme="dark"] {
     --paper: #121A17;
@@ -36,6 +40,9 @@
     --amber: #E0C062;
     --amber-tint: #332C18;
     --accent: #5FE0B6;
+    --site-1: #5B9FE0;
+    --site-2: #C08AE0;
+    --site-3: #E0A15B;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { background: var(--paper); }
@@ -59,11 +66,17 @@
     border-bottom: 1px solid var(--line);
   }
   .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-family: var(--mono);
     font-size: 12px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-soft);
+  }
+  .logo-mark {
+    flex-shrink: 0;
   }
   .theme-toggle {
     font-family: var(--mono);
@@ -191,6 +204,126 @@
     font-size: 13px;
     color: var(--ink);
     cursor: pointer;
+  }
+  .competitors {
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 14px;
+  }
+  .competitors-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .comp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .url-wrap.small { padding: 0 12px; }
+  .url-wrap.small input[type="text"] { padding: 11px 6px; font-size: 14px; }
+  .url-wrap.invalid { border-color: var(--stop); }
+  .field-msg {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--stop);
+    min-height: 15px;
+  }
+  .field-msg.notice { color: var(--ink-soft); }
+  /* ---- compare / dot plot ---- */
+  .compare-panel { width: 100%; margin-bottom: 24px; display: none; }
+  .compare-panel.show { display: block; }
+  .compare-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+  .dotplot-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 0;
+  }
+  .dotplot-row .row-label {
+    width: 96px;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dotplot-track {
+    position: relative;
+    flex: 1;
+    height: 26px;
+  }
+  .dotplot-track::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--line);
+  }
+  .dotplot-row.axis .tick-label {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-soft);
+  }
+  .dot {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    background: var(--dot-color);
+    border: 1.5px solid var(--card);
+    box-shadow: 0 0 0 1px var(--line);
+    transform: translate(-50%, -50%);
+    cursor: default;
+  }
+  .dot.shape-circle { border-radius: 50%; }
+  .dot.shape-square { border-radius: 2px; }
+  .dot.shape-diamond { border-radius: 2px; transform: translate(-50%, -50%) rotate(45deg); }
+  .dot.shape-triangle {
+    width: 0;
+    height: 0;
+    background: none;
+    border: none;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 11px solid var(--dot-color);
+    box-shadow: none;
+  }
+  .dotplot-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .legend-swatch { width: 12px; height: 12px; display: inline-block; flex-shrink: 0; }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
   }
   .hint {
     width: 100%;
@@ -346,13 +479,23 @@
   @media (max-width: 540px) {
     form.scan { flex-direction: column; }
     button.go { padding: 14px; }
+    .dotplot-row .row-label { width: 68px; font-size: 11px; }
+    .dotplot-legend { font-size: 11px; gap: 6px 12px; }
+    .competitors-panel { gap: 8px; }
   }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <span class="brand">agent-ready scanner</span>
+  <span class="brand">
+    <svg class="logo-mark" width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="1" y="1" width="20" height="20" rx="5" fill="var(--accent)"/>
+      <path d="M6.2 15.5L11 6.5L15.8 15.5" stroke="var(--paper)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M8.1 11.8H13.9" stroke="var(--paper)" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    AgentEdge
+  </span>
   <button type="button" class="theme-toggle" id="themeToggle">Dark mode</button>
 </div>
 
@@ -379,10 +522,43 @@
   </div>
 </div>
 
+<div class="competitors">
+  <button type="button" class="customize-toggle" id="competitorsToggle" aria-expanded="false" aria-controls="competitorsPanel">Compare competitors</button>
+  <div class="customize-panel competitors-panel" id="competitorsPanel" hidden>
+    <div class="comp-field">
+      <div class="url-wrap small">
+        <span class="prefix">https://</span>
+        <input type="text" id="compInput1" placeholder="competitor1.com" autocomplete="off" spellcheck="false" aria-label="Competitor 1 address">
+      </div>
+      <span class="field-msg" id="comp1Msg"></span>
+    </div>
+    <div class="comp-field">
+      <div class="url-wrap small">
+        <span class="prefix">https://</span>
+        <input type="text" id="compInput2" placeholder="competitor2.com" autocomplete="off" spellcheck="false" aria-label="Competitor 2 address">
+      </div>
+      <span class="field-msg" id="comp2Msg"></span>
+    </div>
+    <div class="comp-field">
+      <div class="url-wrap small">
+        <span class="prefix">https://</span>
+        <input type="text" id="compInput3" placeholder="competitor3.com" autocomplete="off" spellcheck="false" aria-label="Competitor 3 address">
+      </div>
+      <span class="field-msg" id="comp3Msg"></span>
+    </div>
+  </div>
+</div>
+
 <p class="hint">Each check requests a public file at the site's root, via a public CORS proxy so it works straight from your browser.</p>
 
 <section id="report" aria-live="polite">
   <div class="score-line" id="scoreLine"></div>
+  <div class="compare-panel" id="comparePanel">
+    <h2 class="compare-title">Score comparison</h2>
+    <div class="dotplot" id="dotplot" role="img" aria-label="Dot plot comparing check scores across sites"></div>
+    <div class="dotplot-legend" id="dotplotLegend"></div>
+    <table class="sr-only" id="dotplotTable"></table>
+  </div>
   <div id="checksList"></div>
 </section>
 
@@ -396,18 +572,10 @@
   <details>
     <summary>How do I fix a failing check?</summary>
     <div class="faq-body">
-      Missing <code>robots.txt</code> or <code>sitemap.xml</code>? Publish one at your site's root. Missing <code>llms.txt</code>? Add a plain-text file at <code>/llms.txt</code> summarizing your site for language models. No AI bot rules? Add explicit <code>User-agent</code> blocks for the crawlers you want to allow or disallow — an unlisted crawler falls back to your <code>User-agent: *</code> rules, if any.
-    </div>
-  </details>
-  <details>
-    <summary>Where can I learn more?</summary>
-    <div class="faq-body">
-      See <a href="https://www.rfc-editor.org/rfc/rfc9309.html" target="_blank" rel="noopener">RFC 9309</a> for the robots.txt standard, <a href="https://llmstxt.org/" target="_blank" rel="noopener">llmstxt.org</a> for the llms.txt proposal, and <a href="https://www.sitemaps.org/" target="_blank" rel="noopener">sitemaps.org</a> for sitemap.xml.
+      Failing checks are easy to find and hard to prioritize on your own. We'll tell you exactly what to fix and why it matters — <a href="mailto:hello@agentedge.example?subject=Free%20consultation">contact us for a free consultation</a>.
     </div>
   </details>
 </section>
-
-<footer>My first PR - Monica</footer>
 
 <script>
 const form = document.getElementById('scanForm');
@@ -423,6 +591,16 @@ const chkRobots = document.getElementById('chkRobots');
 const chkLlms = document.getElementById('chkLlms');
 const chkSitemap = document.getElementById('chkSitemap');
 const chkAibots = document.getElementById('chkAibots');
+const competitorsToggle = document.getElementById('competitorsToggle');
+const competitorsPanel = document.getElementById('competitorsPanel');
+const compFields = [1, 2, 3].map(i => ({
+  el: document.getElementById('compInput' + i),
+  msgEl: document.getElementById('comp' + i + 'Msg'),
+}));
+const comparePanel = document.getElementById('comparePanel');
+const dotplot = document.getElementById('dotplot');
+const dotplotLegend = document.getElementById('dotplotLegend');
+const dotplotTable = document.getElementById('dotplotTable');
 
 // ---- theme ----
 function applyTheme(t) {
@@ -443,6 +621,13 @@ customizeToggle.addEventListener('click', () => {
   const expanded = customizeToggle.getAttribute('aria-expanded') === 'true';
   customizeToggle.setAttribute('aria-expanded', String(!expanded));
   customizePanel.hidden = expanded;
+});
+
+// ---- compare competitors ----
+competitorsToggle.addEventListener('click', () => {
+  const expanded = competitorsToggle.getAttribute('aria-expanded') === 'true';
+  competitorsToggle.setAttribute('aria-expanded', String(!expanded));
+  competitorsPanel.hidden = expanded;
 });
 
 function normalize(raw) {
@@ -622,12 +807,110 @@ function renderCheckCard(r) {
     '</div>';
 }
 
+const CHECK_ORDER = ['robots', 'llms', 'sitemap', 'aibots'];
+const CHECK_LABELS = { robots: 'robots.txt', llms: 'llms.txt', sitemap: 'sitemap.xml', aibots: 'AI bot rules' };
+const SITE_SHAPES = ['circle', 'square', 'diamond', 'triangle'];
+
+async function runSiteChecks(origin, enabled) {
+  const robotsPromise = (enabled.robots || enabled.aibots) ? checkRobots(origin) : null;
+  const jobs = {};
+  if (enabled.robots) jobs.robots = robotsPromise;
+  if (enabled.llms) jobs.llms = checkLlms(origin);
+  if (enabled.sitemap) jobs.sitemap = checkSitemap(origin);
+  if (enabled.aibots) jobs.aibots = robotsPromise.then(checkAiBots);
+
+  const keys = Object.keys(jobs);
+  const settled = await Promise.allSettled(keys.map(k => jobs[k]));
+  const resultMap = {};
+  keys.forEach((k, i) => {
+    const s = settled[i];
+    resultMap[k] = s.status === 'fulfilled' ? s.value : { id: k, label: k, status: 'error', stamp: 'ERROR', detail: 'Something went wrong while running this check.' };
+  });
+  return resultMap;
+}
+
+function statusToScore(status) {
+  if (status === 'found') return 100;
+  if (status === 'error') return 50;
+  return 0;
+}
+
+function hostLabel(origin) {
+  return origin.replace(/^https?:\/\//i, '');
+}
+
+function siteKey(origin) {
+  return origin.toLowerCase().replace(/^https?:\/\/(www\.)?/, '');
+}
+
+function resolveSites(primaryOrigin, fields) {
+  const seen = new Set([siteKey(primaryOrigin)]);
+  const sites = [{ origin: primaryOrigin }];
+  fields.forEach(f => {
+    f.el.parentElement.classList.remove('invalid');
+    f.msgEl.textContent = '';
+    f.msgEl.className = 'field-msg';
+    const raw = f.el.value.trim();
+    if (!raw) return;
+    const origin = normalize(raw);
+    if (!origin) {
+      f.el.parentElement.classList.add('invalid');
+      f.msgEl.textContent = 'Not a valid address — skipped.';
+      return;
+    }
+    const key = siteKey(origin);
+    if (seen.has(key)) {
+      f.msgEl.textContent = 'Same as another site — skipped.';
+      f.msgEl.classList.add('notice');
+      return;
+    }
+    seen.add(key);
+    sites.push({ origin });
+  });
+  return sites;
+}
+
+function renderDotPlot(sites, allResults, enabled) {
+  const activeChecks = CHECK_ORDER.filter(k => enabled[k]);
+
+  const rows = activeChecks.map(k => {
+    const dots = sites.map((s, i) => {
+      const score = statusToScore(allResults[i][k].status);
+      return '<span class="dot shape-' + SITE_SHAPES[i] + '" style="left:' + score + '%; --dot-color: var(--site-' + i + ')" ' +
+        'title="' + esc(hostLabel(s.origin)) + ': ' + score + ' (' + esc(allResults[i][k].status) + ')"></span>';
+    }).join('');
+    return '<div class="dotplot-row"><span class="row-label">' + esc(CHECK_LABELS[k]) + '</span>' +
+      '<div class="dotplot-track">' + dots + '</div></div>';
+  }).join('');
+
+  const axis = '<div class="dotplot-row axis"><span class="row-label"></span><div class="dotplot-track">' +
+    [0, 50, 100].map(v => '<span class="tick-label" style="left:' + v + '%">' + v + '</span>').join('') +
+    '</div></div>';
+
+  dotplot.innerHTML = rows + axis;
+
+  dotplotLegend.innerHTML = sites.map((s, i) =>
+    '<span class="legend-item"><i class="legend-swatch shape-' + SITE_SHAPES[i] + '" style="background:var(--site-' + i + ')"></i>' +
+    esc(hostLabel(s.origin)) + (i === 0 ? ' (you)' : '') + '</span>').join('');
+
+  let tableHtml = '<caption>Score comparison by check and site</caption><tr><th>Check</th>' +
+    sites.map(s => '<th>' + esc(hostLabel(s.origin)) + '</th>').join('') + '</tr>';
+  activeChecks.forEach(k => {
+    tableHtml += '<tr><th>' + esc(CHECK_LABELS[k]) + '</th>' +
+      sites.map((s, i) => '<td>' + statusToScore(allResults[i][k].status) + ' (' + esc(allResults[i][k].status) + ')</td>').join('') + '</tr>';
+  });
+  dotplotTable.innerHTML = tableHtml;
+
+  comparePanel.classList.add('show');
+}
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const origin = normalize(input.value);
   if (!origin) {
     report.classList.add('show');
     scoreLine.textContent = '';
+    comparePanel.classList.remove('show');
     checksList.innerHTML = '<div class="check-card error"><div class="check-head"><span class="check-name">Invalid address</span><span class="stamp">ERROR</span></div>' +
       '<p class="check-detail">That doesn’t look like a valid website address. Try something like <strong>example.com</strong>.</p></div>';
     return;
@@ -643,43 +926,37 @@ form.addEventListener('submit', async (e) => {
   if (!enabled.robots && !enabled.llms && !enabled.sitemap && !enabled.aibots) {
     report.classList.add('show');
     scoreLine.textContent = '';
+    comparePanel.classList.remove('show');
     checksList.innerHTML = '<div class="check-card error"><div class="check-head"><span class="check-name">No checks selected</span><span class="stamp">ERROR</span></div>' +
       '<p class="check-detail">Enable at least one check under “Customize scan”.</p></div>';
     return;
   }
 
+  const sites = resolveSites(origin, compFields);
+
   btn.disabled = true;
   btn.textContent = 'Scanning…';
   report.classList.add('show');
-  scoreLine.textContent = 'Scanning ' + origin + ' …';
+  scoreLine.textContent = sites.length > 1 ? ('Scanning ' + sites.length + ' sites…') : ('Scanning ' + origin + ' …');
   checksList.innerHTML = '';
+  comparePanel.classList.remove('show');
 
-  const robotsPromise = (enabled.robots || enabled.aibots) ? checkRobots(origin) : null;
-  const jobs = {};
-  if (enabled.robots) jobs.robots = robotsPromise;
-  if (enabled.llms) jobs.llms = checkLlms(origin);
-  if (enabled.sitemap) jobs.sitemap = checkSitemap(origin);
-  if (enabled.aibots) jobs.aibots = robotsPromise.then(checkAiBots);
-
-  const keys = Object.keys(jobs);
-  const settled = await Promise.allSettled(keys.map(k => jobs[k]));
-
-  const order = ['robots', 'llms', 'sitemap', 'aibots'];
-  const resultMap = {};
-  keys.forEach((k, i) => {
-    const s = settled[i];
-    resultMap[k] = s.status === 'fulfilled' ? s.value : { id: k, label: k, status: 'error', stamp: 'ERROR', detail: 'Something went wrong while running this check.' };
-  });
+  const allResults = await Promise.all(sites.map(s => runSiteChecks(s.origin, enabled)));
+  const primaryResults = allResults[0];
 
   let pass = 0, total = 0;
-  const html = order.filter(k => enabled[k]).map(k => {
+  const html = CHECK_ORDER.filter(k => enabled[k]).map(k => {
     total++;
-    if (resultMap[k].status === 'found') pass++;
-    return renderCheckCard(resultMap[k]);
+    if (primaryResults[k].status === 'found') pass++;
+    return renderCheckCard(primaryResults[k]);
   }).join('');
 
   checksList.innerHTML = html;
   scoreLine.innerHTML = '<b>' + pass + '/' + total + '</b> checks passed';
+
+  if (sites.length > 1) {
+    renderDotPlot(sites, allResults, enabled);
+  }
 
   btn.disabled = false;
   btn.textContent = 'Scan';
