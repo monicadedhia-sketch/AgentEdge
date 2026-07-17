@@ -188,8 +188,8 @@
   }
   .customize-panel {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px 22px;
+    flex-direction: column;
+    gap: 16px;
     margin-top: 12px;
     padding: 16px 18px;
     background: var(--card);
@@ -204,6 +204,20 @@
     font-size: 13px;
     color: var(--ink);
     cursor: pointer;
+  }
+  .check-group-title {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .check-group-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
   }
   .competitors {
     width: 100%;
@@ -337,6 +351,20 @@
   #report.show { display: block; animation: rise 0.35s ease; }
   @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { #report.show { animation: none; } }
+  .scan-target {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 19px;
+    color: var(--ink);
+    margin-bottom: 6px;
+    word-break: break-word;
+  }
+  .scan-target .scan-target-extra {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
   .score-line {
     font-family: var(--mono);
     font-size: 14px;
@@ -344,6 +372,36 @@
     margin-bottom: 18px;
   }
   .score-line b { color: var(--ink); font-weight: 600; }
+  .check-group-section { margin-bottom: 28px; }
+  .check-group-section:last-child { margin-bottom: 0; }
+  .group-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .group-heading {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .group-subtitle {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  .check-layman {
+    font-family: var(--sans);
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+  }
   .check-card {
     background: var(--card);
     border: 1.5px solid var(--line);
@@ -501,7 +559,7 @@
 
 <header class="hero">
   <h1>Is your site<br><span class="file">agent-ready</span>?</h1>
-  <p class="sub">Enter a website address. We'll check the public signals AI agents and crawlers look for — robots.txt, llms.txt, sitemap.xml, and explicit AI bot rules — and report back what we find.</p>
+  <p class="sub">Enter a website address. We'll check the public signals AI agents and crawlers look for — robots.txt, llms.txt, sitemap.xml, explicit AI bot rules, markdown negotiation, JSON-LD, schema.org markup, and support for emerging agent protocols (WebMCP, MCP, UCP, ACP, AP2) — and report back what we find.</p>
 </header>
 
 <form class="scan" id="scanForm">
@@ -515,10 +573,33 @@
 <div class="customize">
   <button type="button" class="customize-toggle" id="customizeToggle" aria-expanded="false" aria-controls="customizePanel">Customize scan</button>
   <div class="customize-panel" id="customizePanel" hidden>
-    <label><input type="checkbox" id="chkRobots" checked> robots.txt</label>
-    <label><input type="checkbox" id="chkLlms" checked> llms.txt</label>
-    <label><input type="checkbox" id="chkSitemap" checked> sitemap.xml</label>
-    <label><input type="checkbox" id="chkAibots" checked> AI bot rules</label>
+    <div class="check-group">
+      <span class="check-group-title">AI Discoverability</span>
+      <div class="check-group-items">
+        <label><input type="checkbox" id="chkRobots" checked> robots.txt</label>
+        <label><input type="checkbox" id="chkLlms" checked> llms.txt</label>
+        <label><input type="checkbox" id="chkSitemap" checked> sitemap.xml</label>
+        <label><input type="checkbox" id="chkAibots" checked> AI bot rules</label>
+      </div>
+    </div>
+    <div class="check-group">
+      <span class="check-group-title">Content Accessibility</span>
+      <div class="check-group-items">
+        <label><input type="checkbox" id="chkMarkdown" checked> Markdown negotiation</label>
+        <label><input type="checkbox" id="chkJsonld" checked> JSON-LD</label>
+        <label><input type="checkbox" id="chkSchemaorg" checked> Schema.org</label>
+      </div>
+    </div>
+    <div class="check-group">
+      <span class="check-group-title">Agent Protocols</span>
+      <div class="check-group-items">
+        <label><input type="checkbox" id="chkWebmcp" checked> WebMCP</label>
+        <label><input type="checkbox" id="chkMcp" checked> MCP</label>
+        <label><input type="checkbox" id="chkUcp" checked> UCP</label>
+        <label><input type="checkbox" id="chkAcp" checked> ACP</label>
+        <label><input type="checkbox" id="chkAp2" checked> AP2</label>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -552,6 +633,7 @@
 <p class="hint">Each check requests a public file at the site's root, via a public CORS proxy so it works straight from your browser.</p>
 
 <section id="report" aria-live="polite">
+  <div class="scan-target" id="scanTarget"></div>
   <div class="score-line" id="scoreLine"></div>
   <div class="compare-panel" id="comparePanel">
     <h2 class="compare-title">Score comparison</h2>
@@ -566,7 +648,19 @@
   <details>
     <summary>What do we check?</summary>
     <div class="faq-body">
-      Four signals, all read straight from your site's public files: <code>robots.txt</code> (crawl rules), <code>llms.txt</code> (a proposed standard for guiding LLMs to your key content), <code>sitemap.xml</code> (page discovery), and whether your <code>robots.txt</code> explicitly addresses known AI crawlers like GPTBot, ClaudeBot, or CCBot.
+      Signals read straight from your site's public files: <code>robots.txt</code> (crawl rules), <code>llms.txt</code> (a proposed standard for guiding LLMs to your key content), <code>sitemap.xml</code> (page discovery), whether your <code>robots.txt</code> explicitly addresses known AI crawlers like GPTBot, ClaudeBot, or CCBot, whether your site is agent-accessible (markdown content negotiation, JSON-LD, schema.org markup), and whether your site advertises support for emerging agent protocols — WebMCP, MCP, UCP, ACP, and AP2.
+    </div>
+  </details>
+  <details>
+    <summary>What is Content Accessibility (Markdown, JSON-LD, Schema.org)?</summary>
+    <div class="faq-body">
+      These checks look at how easily an agent can extract meaning from your pages, not just crawl them: <strong>Markdown negotiation</strong> checks whether your site returns a clean Markdown response when requested with <code>Accept: text/markdown</code>, saving agents from parsing HTML noise (this check is best-effort — the public CORS proxy may not forward the header, so a "not found" isn't conclusive); <strong>JSON-LD</strong> checks for <code>&lt;script type="application/ld+json"&gt;</code> blocks on your homepage, which give agents machine-readable structured data; <strong>Schema.org</strong> checks whether that structured data (or your page's microdata) actually uses the <a href="https://schema.org" target="_blank" rel="noopener">schema.org</a> vocabulary, the most widely recognized standard for describing entities on the web.
+    </div>
+  </details>
+  <details>
+    <summary>What are WebMCP, MCP, UCP, ACP, and AP2?</summary>
+    <div class="faq-body">
+      These are emerging "agentic era" protocols that let AI agents interact with your site programmatically instead of just reading pages: <strong>MCP</strong> (Model Context Protocol) and <strong>WebMCP</strong> let agents discover and call tools or context your site exposes; <strong>UCP</strong>, <strong>ACP</strong> (Agentic Commerce Protocol), and <strong>AP2</strong> (Agent Payments Protocol) are emerging standards for agent-driven commerce and payments. We look for a published manifest — e.g. <code>/.well-known/mcp.json</code> — and fall back to scanning your homepage for a reference to each protocol. Since these standards are still young, this check is best-effort: a "not found" result doesn't guarantee a site has no support, only that we found no public signal of it.
     </div>
   </details>
   <details>
@@ -582,6 +676,7 @@ const form = document.getElementById('scanForm');
 const input = document.getElementById('urlInput');
 const btn = document.getElementById('goBtn');
 const report = document.getElementById('report');
+const scanTarget = document.getElementById('scanTarget');
 const scoreLine = document.getElementById('scoreLine');
 const checksList = document.getElementById('checksList');
 const themeToggle = document.getElementById('themeToggle');
@@ -591,6 +686,14 @@ const chkRobots = document.getElementById('chkRobots');
 const chkLlms = document.getElementById('chkLlms');
 const chkSitemap = document.getElementById('chkSitemap');
 const chkAibots = document.getElementById('chkAibots');
+const chkMarkdown = document.getElementById('chkMarkdown');
+const chkJsonld = document.getElementById('chkJsonld');
+const chkSchemaorg = document.getElementById('chkSchemaorg');
+const chkWebmcp = document.getElementById('chkWebmcp');
+const chkMcp = document.getElementById('chkMcp');
+const chkUcp = document.getElementById('chkUcp');
+const chkAcp = document.getElementById('chkAcp');
+const chkAp2 = document.getElementById('chkAp2');
 const competitorsToggle = document.getElementById('competitorsToggle');
 const competitorsPanel = document.getElementById('competitorsPanel');
 const compFields = [1, 2, 3].map(i => ({
@@ -680,17 +783,23 @@ function plainLines(text, max) {
   return lines.map(l => '<span class="ln">' + (esc(l) || ' ') + '</span>').join('');
 }
 
-async function fetchThroughProxy(url) {
-  try {
-    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url) + '&t=' + Date.now());
-    if (r.ok) {
-      const j = await r.json();
-      const status = j.status && j.status.http_code ? j.status.http_code : (j.contents ? 200 : 0);
-      return { status, text: j.contents || '' };
-    }
-  } catch (e) { /* fall through */ }
-  const r2 = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(url));
-  return { status: r2.status, text: await r2.text() };
+async function fetchThroughProxy(url, headers) {
+  // allorigins.win has no way to forward custom request headers to the target,
+  // so a caller that needs specific headers (e.g. Accept: text/markdown) must
+  // skip straight to corsproxy.io, the only one of the two that can carry them.
+  if (!headers) {
+    try {
+      const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url) + '&t=' + Date.now());
+      if (r.ok) {
+        const j = await r.json();
+        const status = j.status && j.status.http_code ? j.status.http_code : (j.contents ? 200 : 0);
+        const contentType = (j.status && j.status.content_type) || '';
+        return { status, text: j.contents || '', contentType };
+      }
+    } catch (e) { /* fall through */ }
+  }
+  const r2 = await fetch('https://corsproxy.io/?url=' + encodeURIComponent(url), headers ? { headers } : undefined);
+  return { status: r2.status, text: await r2.text(), contentType: r2.headers.get('content-type') || '' };
 }
 
 // ---- individual checks ----
@@ -799,25 +908,207 @@ function checkAiBots(robotsResult) {
     detail: 'None of the common AI crawlers (GPTBot, ClaudeBot, CCBot, and others) are explicitly named in robots.txt. They’ll fall back to any <strong>User-agent: *</strong> rules present, if any.' };
 }
 
+// ---- agent protocol checks (WebMCP, MCP, UCP, ACP, AP2) ----
+
+const AGENT_PROTOCOLS = [
+  { id: 'webmcp', label: 'WebMCP', wellKnown: '/.well-known/webmcp.json', keywords: [/web[\s-]?mcp/i] },
+  { id: 'mcp', label: 'MCP', wellKnown: '/.well-known/mcp.json', keywords: [/model context protocol/i, /modelcontextprotocol/i, /\bmcp\.json\b/i] },
+  { id: 'ucp', label: 'UCP', wellKnown: '/.well-known/ucp.json', keywords: [/universal commerce protocol/i, /\bucp\.json\b/i] },
+  { id: 'acp', label: 'ACP', wellKnown: '/.well-known/acp.json', keywords: [/agentic commerce protocol/i, /\bacp\.json\b/i] },
+  { id: 'ap2', label: 'AP2', wellKnown: '/.well-known/ap2.json', keywords: [/agent payments protocol/i, /\bap2\b/i] },
+];
+
+async function fetchHomepage(origin) {
+  return fetchThroughProxy(origin + '/');
+}
+
+async function checkAgentProtocol(origin, homepageText, def) {
+  const wellKnownUrl = origin + def.wellKnown;
+  const base = { id: def.id, label: def.label, url: wellKnownUrl };
+  try {
+    const { status, text } = await fetchThroughProxy(wellKnownUrl);
+    if (status === 200 && text && !looksLikeHtml(text)) {
+      return { ...base, status: 'found', stamp: 'FOUND',
+        detail: '<strong>' + esc(origin) + '</strong> publishes a manifest at <strong>' + esc(def.wellKnown) + '</strong>, indicating ' + esc(def.label) + ' support.',
+        extra: '<div class="filecard"><div class="bar"><span>' + esc(wellKnownUrl) + '</span><a href="' + esc(wellKnownUrl) + '" target="_blank" rel="noopener">open raw file ↗</a></div>' +
+          '<pre class="body">' + plainLines(text, 40) + '</pre></div>' };
+    }
+  } catch (e) { /* fall through to homepage scan */ }
+
+  const mentioned = !!(homepageText && def.keywords.some((re) => re.test(homepageText)));
+  if (mentioned) {
+    return { ...base, status: 'found', stamp: 'MENTIONED',
+      detail: '<strong>' + esc(origin) + '</strong> doesn’t publish a ' + esc(def.wellKnown) + ' manifest, but its homepage references ' + esc(def.label) + '.' };
+  }
+  return { ...base, status: 'missing', stamp: 'NOT FOUND',
+    detail: 'No ' + esc(def.label) + ' manifest or homepage reference found for <strong>' + esc(origin) + '</strong>.' };
+}
+
+// ---- content accessibility checks (Markdown negotiation, JSON-LD, Schema.org) ----
+
+function extractJsonLdBlocks(html) {
+  const blocks = [];
+  const re = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = re.exec(html || ''))) blocks.push(m[1].trim());
+  return blocks;
+}
+
+async function checkMarkdownNegotiation(origin) {
+  const url = origin + '/';
+  const base = { id: 'markdown', label: 'Markdown negotiation', url };
+  try {
+    const { status, text, contentType } = await fetchThroughProxy(url, { Accept: 'text/markdown' });
+    const looksMarkdown = /text\/markdown/i.test(contentType || '') ||
+      (status === 200 && text && !looksLikeHtml(text) && /(^|\n)#{1,3}\s|\[[^\]]+\]\([^)]+\)/.test(text));
+    if (status === 200 && looksMarkdown) {
+      return { ...base, status: 'found', stamp: 'FOUND',
+        detail: '<strong>' + esc(origin) + '</strong> returned Markdown when requested with <strong>Accept: text/markdown</strong> — it supports content negotiation for agents.' };
+    }
+  } catch (e) { /* fall through */ }
+  return { ...base, status: 'missing', stamp: 'NOT FOUND',
+    detail: 'Requesting <strong>' + esc(origin) + '</strong> with <strong>Accept: text/markdown</strong> did not return Markdown. This check is best-effort — the public CORS proxy may not forward the Accept header to the target site, so a "not found" result isn’t conclusive.' };
+}
+
+function checkJsonLd(origin, homepageHtml) {
+  const base = { id: 'jsonld', label: 'JSON-LD' };
+  const blocks = extractJsonLdBlocks(homepageHtml);
+  if (blocks.length) {
+    return { ...base, status: 'found', stamp: 'FOUND',
+      detail: '<strong>' + esc(origin) + '</strong> embeds <strong>' + blocks.length + '</strong> JSON-LD script block' + (blocks.length === 1 ? '' : 's') + ' on its homepage, giving agents machine-readable structured data.' };
+  }
+  return { ...base, status: 'missing', stamp: 'NOT FOUND',
+    detail: 'No <code>&lt;script type="application/ld+json"&gt;</code> block found on the homepage of <strong>' + esc(origin) + '</strong>.' };
+}
+
+function checkSchemaOrg(origin, homepageHtml) {
+  const base = { id: 'schemaorg', label: 'Schema.org' };
+  const html = homepageHtml || '';
+  const blocks = extractJsonLdBlocks(html);
+  const jsonLdHasSchema = blocks.some(b => /schema\.org/i.test(b));
+  const microdataHasSchema = /itemtype\s*=\s*["']https?:\/\/schema\.org\//i.test(html);
+  if (jsonLdHasSchema || microdataHasSchema) {
+    const via = jsonLdHasSchema && microdataHasSchema ? 'JSON-LD and microdata' : (jsonLdHasSchema ? 'JSON-LD' : 'microdata');
+    return { ...base, status: 'found', stamp: 'FOUND',
+      detail: '<strong>' + esc(origin) + '</strong> references the <strong>schema.org</strong> vocabulary via ' + via + ' on its homepage.' };
+  }
+  return { ...base, status: 'missing', stamp: 'NOT FOUND',
+    detail: 'No schema.org vocabulary reference found (via JSON-LD <code>@context</code> or microdata <code>itemtype</code>) on the homepage of <strong>' + esc(origin) + '</strong>.' };
+}
+
+const GROUP_LAYMAN = {
+  'AI Discoverability': 'Can search engines and AI crawlers find, read, and correctly understand your site?',
+  'Content Accessibility': 'Can AI agents easily pull clean, trustworthy facts from your pages, instead of guessing from messy web design?',
+  'Agent Protocols': 'Can AI agents go beyond reading your site — discovering tools, completing purchases, or making payments on it directly?',
+};
+
+const CHECK_LAYMAN = {
+  robots: {
+    found: 'You’re giving crawlers and AI agents clear ground rules for your site, which builds trust and avoids surprises.',
+    missing: 'With no published ground rules, crawlers and AI agents are left guessing what’s off-limits on your site.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+  llms: {
+    found: 'You’re proactively pointing AI models to your most important content, like a briefing document for a new hire.',
+    missing: 'AI models have no shortcut to your key content, so they may miss or misrepresent your business.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+  sitemap: {
+    found: 'AI systems and search engines can find all of your important pages instead of relying on guesswork.',
+    missing: 'Pages that aren’t well linked may go undiscovered by AI systems and search engines.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+  aibots: {
+    found: 'You’ve explicitly decided which AI companies can access your content, and how — rather than leaving it to chance.',
+    missing: 'You haven’t set rules for well-known AI crawlers, so they’ll apply their own defaults on your site.',
+    error: 'We couldn’t check this because no robots.txt was found to inspect.',
+  },
+  markdown: {
+    found: 'Your site can hand AI agents clean, readable content directly, instead of forcing them to strip out design clutter.',
+    missing: 'AI agents have to wade through your full page design just to extract the text, which slows them down and risks losing information.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+  jsonld: {
+    found: 'Key facts about your business (hours, products, reviews) are readable directly by machines, not just humans.',
+    missing: 'Facts about your business live only in visual text, which AI systems are more likely to misread or miss entirely.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+  schemaorg: {
+    found: 'You’re using the industry-standard vocabulary that AI systems and search engines rely on to correctly interpret your content.',
+    missing: 'Even if you share structured data, it may not use the vocabulary AI systems expect, so it could go unrecognized.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+  webmcp: {
+    found: 'AI browser assistants can use tools your website exposes, not just read the page.',
+    missing: 'AI browser assistants can only read your site passively — they can’t yet trigger actions on it.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+  mcp: {
+    found: 'Your organization has a defined, secure way for AI agents to connect with your business tools or data.',
+    missing: 'There’s no discoverable way for AI agents to connect with your systems beyond reading web pages.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+  ucp: {
+    found: 'Your site signals support for an emerging standard AI agents use to interact consistently across websites.',
+    missing: 'No signal yet that your site supports this emerging interoperability standard.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+  acp: {
+    found: 'AI shopping agents can potentially complete a purchase on your site following a standard, trusted flow.',
+    missing: 'AI shopping agents currently have no standardized way to complete a purchase on your site.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+  ap2: {
+    found: 'Your site signals it’s ready to accept payments an AI agent initiates on a customer’s behalf.',
+    missing: 'There’s no sign yet that your site supports AI-agent-initiated payments.',
+    error: 'We couldn’t confirm this from a public scan — worth checking manually.',
+  },
+};
+
+function laymanLine(r) {
+  const entry = CHECK_LAYMAN[r.id];
+  if (!entry) return '';
+  return entry[r.status] || entry.error || '';
+}
+
 function renderCheckCard(r) {
+  const layman = laymanLine(r);
   return '<div class="check-card ' + r.status + '">' +
     '<div class="check-head"><span class="check-name">' + esc(r.label) + '</span><span class="stamp">' + esc(r.stamp) + '</span></div>' +
     '<p class="check-detail">' + r.detail + '</p>' +
+    (layman ? '<p class="check-layman">' + esc(layman) + '</p>' : '') +
     (r.extra ? '<div class="check-extra">' + r.extra + '</div>' : '') +
     '</div>';
 }
 
-const CHECK_ORDER = ['robots', 'llms', 'sitemap', 'aibots'];
-const CHECK_LABELS = { robots: 'robots.txt', llms: 'llms.txt', sitemap: 'sitemap.xml', aibots: 'AI bot rules' };
+const CHECK_ORDER = ['robots', 'llms', 'sitemap', 'aibots', 'markdown', 'jsonld', 'schemaorg', 'webmcp', 'mcp', 'ucp', 'acp', 'ap2'];
+const CHECK_LABELS = {
+  robots: 'robots.txt', llms: 'llms.txt', sitemap: 'sitemap.xml', aibots: 'AI bot rules',
+  markdown: 'Markdown negotiation', jsonld: 'JSON-LD', schemaorg: 'Schema.org',
+  webmcp: 'WebMCP', mcp: 'MCP', ucp: 'UCP', acp: 'ACP', ap2: 'AP2',
+};
+const CHECK_GROUPS = [
+  { title: 'AI Discoverability', keys: ['robots', 'llms', 'sitemap', 'aibots'] },
+  { title: 'Content Accessibility', keys: ['markdown', 'jsonld', 'schemaorg'] },
+  { title: 'Agent Protocols', keys: ['webmcp', 'mcp', 'ucp', 'acp', 'ap2'] },
+];
 const SITE_SHAPES = ['circle', 'square', 'diamond', 'triangle'];
 
 async function runSiteChecks(origin, enabled) {
   const robotsPromise = (enabled.robots || enabled.aibots) ? checkRobots(origin) : null;
+  const needsHomepage = enabled.jsonld || enabled.schemaorg || AGENT_PROTOCOLS.some(p => enabled[p.id]);
+  const homepagePromise = needsHomepage ? fetchHomepage(origin).then(r => r.text || '').catch(() => '') : null;
   const jobs = {};
   if (enabled.robots) jobs.robots = robotsPromise;
   if (enabled.llms) jobs.llms = checkLlms(origin);
   if (enabled.sitemap) jobs.sitemap = checkSitemap(origin);
   if (enabled.aibots) jobs.aibots = robotsPromise.then(checkAiBots);
+  if (enabled.markdown) jobs.markdown = checkMarkdownNegotiation(origin);
+  if (enabled.jsonld) jobs.jsonld = homepagePromise.then(html => checkJsonLd(origin, html));
+  if (enabled.schemaorg) jobs.schemaorg = homepagePromise.then(html => checkSchemaOrg(origin, html));
+  AGENT_PROTOCOLS.forEach(p => {
+    if (enabled[p.id]) jobs[p.id] = homepagePromise.then(html => checkAgentProtocol(origin, html, p));
+  });
 
   const keys = Object.keys(jobs);
   const settled = await Promise.allSettled(keys.map(k => jobs[k]));
@@ -909,6 +1200,7 @@ form.addEventListener('submit', async (e) => {
   const origin = normalize(input.value);
   if (!origin) {
     report.classList.add('show');
+    scanTarget.textContent = '';
     scoreLine.textContent = '';
     comparePanel.classList.remove('show');
     checksList.innerHTML = '<div class="check-card error"><div class="check-head"><span class="check-name">Invalid address</span><span class="stamp">ERROR</span></div>' +
@@ -921,10 +1213,19 @@ form.addEventListener('submit', async (e) => {
     llms: chkLlms.checked,
     sitemap: chkSitemap.checked,
     aibots: chkAibots.checked,
+    markdown: chkMarkdown.checked,
+    jsonld: chkJsonld.checked,
+    schemaorg: chkSchemaorg.checked,
+    webmcp: chkWebmcp.checked,
+    mcp: chkMcp.checked,
+    ucp: chkUcp.checked,
+    acp: chkAcp.checked,
+    ap2: chkAp2.checked,
   };
 
-  if (!enabled.robots && !enabled.llms && !enabled.sitemap && !enabled.aibots) {
+  if (!CHECK_ORDER.some(k => enabled[k])) {
     report.classList.add('show');
+    scanTarget.innerHTML = 'Scan results for <strong>' + esc(origin) + '</strong>';
     scoreLine.textContent = '';
     comparePanel.classList.remove('show');
     checksList.innerHTML = '<div class="check-card error"><div class="check-head"><span class="check-name">No checks selected</span><span class="stamp">ERROR</span></div>' +
@@ -937,18 +1238,29 @@ form.addEventListener('submit', async (e) => {
   btn.disabled = true;
   btn.textContent = 'Scanning…';
   report.classList.add('show');
-  scoreLine.textContent = sites.length > 1 ? ('Scanning ' + sites.length + ' sites…') : ('Scanning ' + origin + ' …');
+  scanTarget.innerHTML = 'Scanning <strong>' + esc(origin) + '</strong>' +
+    (sites.length > 1 ? ' <span class="scan-target-extra">+ ' + (sites.length - 1) + ' compared site' + (sites.length - 1 === 1 ? '' : 's') + '</span>' : '');
+  scoreLine.textContent = '';
   checksList.innerHTML = '';
   comparePanel.classList.remove('show');
 
   const allResults = await Promise.all(sites.map(s => runSiteChecks(s.origin, enabled)));
   const primaryResults = allResults[0];
 
+  scanTarget.innerHTML = 'Scan results for <strong>' + esc(origin) + '</strong>' +
+    (sites.length > 1 ? ' <span class="scan-target-extra">+ ' + (sites.length - 1) + ' compared site' + (sites.length - 1 === 1 ? '' : 's') + '</span>' : '');
+
   let pass = 0, total = 0;
-  const html = CHECK_ORDER.filter(k => enabled[k]).map(k => {
-    total++;
-    if (primaryResults[k].status === 'found') pass++;
-    return renderCheckCard(primaryResults[k]);
+  const html = CHECK_GROUPS.map(g => {
+    const activeKeys = g.keys.filter(k => enabled[k]);
+    if (!activeKeys.length) return '';
+    const cards = activeKeys.map(k => {
+      total++;
+      if (primaryResults[k].status === 'found') pass++;
+      return renderCheckCard(primaryResults[k]);
+    }).join('');
+    const subtitle = GROUP_LAYMAN[g.title] ? '<p class="group-subtitle">(' + esc(GROUP_LAYMAN[g.title]) + ')</p>' : '';
+    return '<section class="check-group-section"><div class="group-header"><h2 class="group-heading">' + esc(g.title) + '</h2>' + subtitle + '</div>' + cards + '</section>';
   }).join('');
 
   checksList.innerHTML = html;
